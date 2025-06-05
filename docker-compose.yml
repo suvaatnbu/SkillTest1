@@ -1,0 +1,81 @@
+version: '3.9'
+
+services:
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mongodb://mongo:27017/mydb
+    depends_on:
+      - mongo
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mongodb://mongo:27017/mydb
+    depends_on:
+      - mongo
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    ports:
+      - "3004:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mongodb://mongo:27017/mydb
+    depends_on:
+      - mongo
+
+  gateway-service:
+    build:
+      context: ./gateway-service
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3000"
+    depends_on:
+      - product-service
+      - auth-service
+      - user-service
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway-service
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5000:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mongodb://mongo:27017/mydb
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
+
